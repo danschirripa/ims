@@ -10,6 +10,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import edu.moravian.schirripad.ims.client.Main;
 import edu.moravian.schirripad.ims.client.inventory.Listing;
 
 public class ListingPanel extends JPanel {
@@ -31,6 +32,9 @@ public class ListingPanel extends JPanel {
 		JLabel icon;
 		if (l.hasImage()) {
 			Image img = l.getImage();
+			if (img == null) {
+				img = Main.defImg;
+			}
 			double ratio = 1;
 			double x = img.getWidth(null);
 			double y = img.getHeight(null);

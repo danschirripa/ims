@@ -14,6 +14,7 @@ import java.util.Scanner;
 import javax.imageio.ImageIO;
 
 import edu.moravian.schirripad.ims.client.ConnectionHandler;
+import edu.moravian.schirripad.ims.client.Main;
 import edu.moravian.schirripad.ims.client.Ticket;
 import edu.moravian.schirripad.ims.client.TicketException;
 import edu.moravian.schirripad.ims.client.gui.MainFrame;
@@ -86,47 +87,50 @@ public class Listing {
 			return img;
 		}
 		ConnectionHandler ch = MainFrame.ch;
-		Ticket getImg = new Ticket() {
+		if (ch != null) {
+			Ticket getImg = new Ticket() {
 
-			@Override
-			public boolean action(Scanner sc, PrintStream out) throws TicketException {
-				// TODO Create ticket for getting image
-				System.out.println("Getting img");
-				out.println("get");
-				sc.nextLine();
-				out.println(getListingName());
-				out.println("image");
-				String next = sc.nextLine();
-				if (next.equalsIgnoreCase("NOIMAGE")) {
+				@Override
+				public boolean action(Scanner sc, PrintStream out) throws TicketException {
+					// TODO Create ticket for getting image
+					System.out.println("Getting img");
+					out.println("get");
+					sc.nextLine();
+					out.println(getListingName());
+					out.println("image");
+					String next = sc.nextLine();
+					if (next.equalsIgnoreCase("NOIMAGE")) {
+						return true;
+					}
+					next = sc.nextLine();
+					int n = Integer.parseInt(next);
+					byte[] imgByte = new byte[n];
+					n = 0;
+					while (!(next = sc.nextLine()).equals("DONE")) {
+						imgByte[n] = (byte) Integer.parseInt(next);
+						n++;
+					}
+					ByteArrayInputStream bin = new ByteArrayInputStream(imgByte);
+					try {
+						img = ImageIO.read(bin);
+					} catch (IOException e) {
+						e.printStackTrace();
+						return false;
+					}
 					return true;
 				}
-				next = sc.nextLine();
-				int n = Integer.parseInt(next);
-				byte[] imgByte = new byte[n];
-				n = 0;
-				while (!(next = sc.nextLine()).equals("DONE")) {
-					imgByte[n] = (byte) Integer.parseInt(next);
-					n++;
-				}
-				ByteArrayInputStream bin = new ByteArrayInputStream(imgByte);
+			};
+			ch.addTicket(getImg);
+			while (!getImg.isDone()) {
 				try {
-					img = ImageIO.read(bin);
-				} catch (IOException e) {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
 					e.printStackTrace();
-					return false;
 				}
-				return true;
 			}
-		};
-		ch.addTicket(getImg);
-		while (!getImg.isDone()) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			return img;
 		}
-		return img;
+		return Main.defImg;
 	}
 
 	public int getPrice() {

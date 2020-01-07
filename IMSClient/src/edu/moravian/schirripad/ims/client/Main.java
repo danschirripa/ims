@@ -1,13 +1,18 @@
 package edu.moravian.schirripad.ims.client;
 
+import java.awt.Image;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Hashtable;
 import java.util.Scanner;
+
+import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
 
 import edu.moravian.schirripad.ims.client.gui.MainFrame;
 import edu.moravian.schirripad.ims.client.inventory.InventoryManager;
@@ -18,6 +23,7 @@ public class Main {
 	private static Hashtable<String, String> configuration;
 	private static InventoryManager ims;
 	public static final File home = new File(System.getProperty("user.home"));
+	public static Image defImg;
 	private static boolean isOffline;
 
 	public static void main(String[] args) {
@@ -35,6 +41,19 @@ public class Main {
 	}
 
 	private static void loadConf() {
+		log.log("Loading default image...");
+		try {
+			/// InputStream in =
+			/// ClassLoader.getSystemClassLoader().getResourceAsStream("assets/imagenotfound.png");
+			/// defImg = ImageIO.read(in);
+			/// in.close();
+			defImg = ImageIO
+					.read(new File("/home/dan/Code/InventoryManagementSolutions/IMSClient/assets/imagenotfound.png"));
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Failed to load default image asset!");
+			System.exit(-1);
+		}
 		log.log("Loading configuration...");
 		File conf = new File(home, "ims/ims.conf");
 		if (!conf.exists()) {

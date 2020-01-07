@@ -88,7 +88,7 @@ public class MainFrame extends JFrame {
 					out.println("list");
 					String stringN = sc.nextLine();
 					int n = 0;
-					try {
+					try { 
 						n = Integer.parseInt(stringN);
 					} catch (Exception e) {
 						e.printStackTrace();
