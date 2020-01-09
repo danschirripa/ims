@@ -56,7 +56,13 @@ public class TransactionHandler {
 						out.println("GOOD");
 						String listingName = parts[0];
 						boolean hasImage = Boolean.parseBoolean(parts[1]);
-						File image = new File(parts[2]);
+						File image;
+						try {
+							image = new File(parts[2]);
+						} catch (NullPointerException e) {
+							hasImage = false;
+							image = new File("assets/imagenotfound.png");
+						}
 						String unparsedCats = parts[3];
 						boolean isSold = Boolean.parseBoolean(parts[4]);
 						int quantity = Integer.parseInt(parts[5]);

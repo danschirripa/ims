@@ -8,6 +8,8 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Scanner;
 
+import edu.moravian.schirripad.ims.server.Main;
+
 public class Listing {
 	private boolean hasImage, isSold;
 	private int quantity, price, id;
@@ -70,6 +72,9 @@ public class Listing {
 	}
 
 	public File getImage() {
+		if (image == null) {
+			return Main.defImg;
+		}
 		return image;
 	}
 

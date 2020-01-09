@@ -6,8 +6,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.PrintStream;
-import java.util.Scanner;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -18,9 +18,8 @@ import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import edu.moravian.schirripad.ims.client.Main;
-import edu.moravian.schirripad.ims.client.Ticket;
-import edu.moravian.schirripad.ims.client.TicketException;
 import edu.moravian.schirripad.ims.client.inventory.Listing;
+import edu.moravian.schirripad.ims.client.inventory.ListingException;
 
 public class EditPanel extends JPanel {
 	private EditPanel editor = this;
@@ -135,19 +134,17 @@ public class EditPanel extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				// TODO Create ticket to upload new listing info
-				if (Main.getOffline()) {
-					// Cache the listing update into a folder for later uploading
-				} else {
-					// Upload the listing now
-					Ticket upload = new Ticket() {
-
-						@Override
-						public boolean action(Scanner sc, PrintStream out) throws TicketException {
-							return false;
-						}
-
-					};
+				// Create new/updated listing
+				String[] cats = new String[l.getCategories().size()];
+				cats = l.getCategories().toArray(cats);
+				try {
+					Main.getIMS().createListing(l.getID(), l.getListingName(), descField.getText(),
+							Integer.parseInt(quantityField.getText()), Integer.parseInt(priceField.getText()),
+							l.hasImage(), l.isSold(), new File(""), cats);
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				} catch (ListingException e) {
+					e.printStackTrace();
 				}
 			}
 

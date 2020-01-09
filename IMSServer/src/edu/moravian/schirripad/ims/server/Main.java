@@ -1,13 +1,18 @@
 package edu.moravian.schirripad.ims.server;
 
+import java.awt.Image;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Hashtable;
 import java.util.Scanner;
+
+import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
 
 import edu.moravian.schirripad.ims.logging.Logger;
 import edu.moravian.schirripad.ims.server.inventory.InventoryManager;
@@ -16,6 +21,7 @@ public class Main {
 	private static final Logger log = new Logger("Main");
 	private static Hashtable<String, String> configuration;
 	private static InventoryManager ims;
+	public static File defImg;
 	// public static final int PORT = 35;
 
 	public static void main(String[] args) {
@@ -47,6 +53,15 @@ public class Main {
 	}
 
 	private static void loadConf() {
+		log.log("Loading default image...");
+		try {
+			defImg = new File(ClassLoader.getSystemClassLoader().getResource("assets/imagenotfound.png").getFile());
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Failed to load default image asset!");
+			System.exit(-1);
+		}
+
 		log.log("Loading configuration...");
 		File conf = new File("/etc/ims/ims.conf");
 		if (!conf.exists()) {

@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.Hashtable;
 
 import edu.moravian.schirripad.ims.client.Main;
+import edu.moravian.schirripad.ims.client.gui.MainFrame;
+import edu.moravian.schirripad.ims.client.tickets.CreateListingTicket;
 import edu.moravian.schirripad.ims.logging.Logger;
 
 public class InventoryManager {
@@ -83,6 +85,7 @@ public class InventoryManager {
 			if (listings.containsKey(listingName)) {
 				listings.remove(listingName);
 			}
+
 			PrintStream out = new PrintStream(new FileOutputStream(f));
 			out.println("id:" + id);
 			out.println("hasimage:" + hasImage);
@@ -98,6 +101,8 @@ public class InventoryManager {
 			out.println("quantity:" + quantity);
 			out.println("price:" + price);
 			out.println("description:" + description);
+			if (MainFrame.ch == null)
+				out.println("new:" + true);
 			out.flush();
 			out.close();
 
@@ -112,12 +117,13 @@ public class InventoryManager {
 				n++;
 			}
 
+			if (MainFrame.ch != null) {
+				CreateListingTicket clt = new CreateListingTicket(l);
+				MainFrame.ch.addTicket(clt);
+			}
+
 			listings.put(lName, l);
 			listingsByID.put(l.getID(), l);
-
-			if (Main.getOffline()) {
-				// Write to cache directory, for uploading when online
-			}
 
 		} catch (Exception e) {
 			throw new ListingException(e);

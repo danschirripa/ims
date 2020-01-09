@@ -8,6 +8,7 @@ import java.util.HashSet;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import edu.moravian.schirripad.ims.client.Main;
@@ -19,6 +20,10 @@ public class ListingPanel extends JPanel {
 	 * Create the panel.
 	 */
 	public ListingPanel(Listing l) {
+		if (l == null) {
+			JOptionPane.showMessageDialog(null, "NULL LISTING");
+			System.exit(-1);
+		}
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 205, 0, 40, 0, 0, 0, 0 };
 		gridBagLayout.rowHeights = new int[] { 15, 0, 0, 0, 0, 0, 0, 0 };

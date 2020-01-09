@@ -1,26 +1,22 @@
 package edu.moravian.schirripad.ims.client.inventory;
 
 import java.awt.Image;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Scanner;
 
-import javax.imageio.ImageIO;
-
 import edu.moravian.schirripad.ims.client.ConnectionHandler;
 import edu.moravian.schirripad.ims.client.Main;
-import edu.moravian.schirripad.ims.client.Ticket;
-import edu.moravian.schirripad.ims.client.TicketException;
 import edu.moravian.schirripad.ims.client.gui.MainFrame;
+import edu.moravian.schirripad.ims.client.tickets.GetImageTicket;
 
 public class Listing {
-	private boolean hasImage, isSold;
+	private boolean hasImage, isSold, isNew = false;
 	private int quantity, price, id;
 	private File image, listingConf;
 	private Image img;
@@ -69,14 +65,37 @@ public class Listing {
 			case "id":
 				id = Integer.parseInt(parts[1]);
 				break;
+			case "new":
+				isNew = Boolean.parseBoolean(parts[1]);
 			}
 		}
 		sc.close();
 		sc = null;
 	}
 
+	public Listing(int id, String listingName, String description, int quantity, int price, boolean hasImage,
+			boolean isSold, File image, String[] categories) {
+		this.id = id;
+		this.listingName = listingName;
+		this.description = description;
+		this.quantity = quantity;
+		this.price = price;
+		this.hasImage = hasImage;
+		this.isSold = isSold;
+		this.image = image;
+		this.categories = new HashSet<String>(Arrays.asList(categories));
+	}
+
 	public boolean hasImage() {
 		return hasImage;
+	}
+
+	public void setNew(boolean isNew) {
+		this.isNew = isNew;
+	}
+
+	public boolean isNew() {
+		return isNew;
 	}
 
 	public Image getImage() {
@@ -88,38 +107,7 @@ public class Listing {
 		}
 		ConnectionHandler ch = MainFrame.ch;
 		if (ch != null) {
-			Ticket getImg = new Ticket() {
-
-				@Override
-				public boolean action(Scanner sc, PrintStream out) throws TicketException {
-					// TODO Create ticket for getting image
-					System.out.println("Getting img");
-					out.println("get");
-					sc.nextLine();
-					out.println(getListingName());
-					out.println("image");
-					String next = sc.nextLine();
-					if (next.equalsIgnoreCase("NOIMAGE")) {
-						return true;
-					}
-					next = sc.nextLine();
-					int n = Integer.parseInt(next);
-					byte[] imgByte = new byte[n];
-					n = 0;
-					while (!(next = sc.nextLine()).equals("DONE")) {
-						imgByte[n] = (byte) Integer.parseInt(next);
-						n++;
-					}
-					ByteArrayInputStream bin = new ByteArrayInputStream(imgByte);
-					try {
-						img = ImageIO.read(bin);
-					} catch (IOException e) {
-						e.printStackTrace();
-						return false;
-					}
-					return true;
-				}
-			};
+			GetImageTicket getImg = new GetImageTicket(this);
 			ch.addTicket(getImg);
 			while (!getImg.isDone()) {
 				try {
@@ -128,6 +116,7 @@ public class Listing {
 					e.printStackTrace();
 				}
 			}
+			img = getImg.getImage();
 			return img;
 		}
 		return Main.defImg;
@@ -197,6 +186,8 @@ public class Listing {
 			out.println(allCats);
 			out.println("sold:" + isSold);
 			out.println("quantity:" + quantity);
+			out.println("new:" + isNew);
+			out.println("description:" + description);
 			out.flush();
 			out.close();
 		} catch (Exception e) {

@@ -88,7 +88,7 @@ public class MainFrame extends JFrame {
 					out.println("list");
 					String stringN = sc.nextLine();
 					int n = 0;
-					try { 
+					try {
 						n = Integer.parseInt(stringN);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -117,7 +117,12 @@ public class MainFrame extends JFrame {
 							String[] parts = listing.split(";");
 
 							String listingName = parts[0];
-							boolean hasImage = Boolean.parseBoolean(parts[1]);
+							boolean hasImage;
+							try {
+								hasImage = Boolean.parseBoolean(parts[1]);
+							} catch (Exception e) {
+								hasImage = false;
+							}
 							File image = new File(parts[2]);
 							String unparsedCats = parts[3];
 							boolean isSold = Boolean.parseBoolean(parts[4]);
@@ -233,15 +238,17 @@ public class MainFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Create new Listing
 				int id;
+				String name;
 				while (true)
 					try {
 						id = Integer.parseInt(JOptionPane.showInputDialog("Listing ID:"));
+						name = JOptionPane.showInputDialog("Listing name: ");
 						break;
 					} catch (Exception e1) {
 						continue;
 					}
 				try {
-					Main.getIMS().createListing(id, " ", " ", 0, 0, false, false, null, new String[1]);
+					Main.getIMS().createListing(id, name, " ", 0, 0, false, false, null, new String[1]);
 				} catch (ListingException e1) {
 					e1.printStackTrace();
 					JOptionPane.showMessageDialog(null, "Failed to create new Listing: " + e1.getMessage());
