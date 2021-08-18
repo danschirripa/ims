@@ -43,12 +43,11 @@ public class Main {
 	private static void loadConf() {
 		log.log("Loading default image...");
 		try {
-			/// InputStream in =
-			/// ClassLoader.getSystemClassLoader().getResourceAsStream("assets/imagenotfound.png");
-			/// defImg = ImageIO.read(in);
-			/// in.close();
-			defImg = ImageIO
-					.read(new File("/home/dan/Code/InventoryManagementSolutions/IMSClient/assets/imagenotfound.png"));
+			InputStream in = ClassLoader.getSystemClassLoader().getResourceAsStream("assets/imagenotfound.png");
+			defImg = ImageIO.read(in);
+			in.close();
+			// defImg = ImageIO
+			// .read(new File("assets/imagenotfound.png"));
 		} catch (Exception e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Failed to load default image asset!");

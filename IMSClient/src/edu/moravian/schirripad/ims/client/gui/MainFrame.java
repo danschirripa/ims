@@ -45,6 +45,7 @@ import edu.moravian.schirripad.ims.client.inventory.ListingException;
 
 public class MainFrame extends JFrame {
 	public static ConnectionHandler ch;
+	public static boolean printPrice = true;
 	private JTextField txtSearch;
 	private JPanel displayTab, editTab;
 	private JList<Listing> list;
@@ -52,6 +53,7 @@ public class MainFrame extends JFrame {
 	private JTabbedPane listingPanel, displayPanel;
 	private JFrame prog;
 	private JLabel progUpdate;
+	private NewListingListener nll;
 
 	private DefaultListModel<Listing> listModel;
 
@@ -128,14 +130,15 @@ public class MainFrame extends JFrame {
 							boolean isSold = Boolean.parseBoolean(parts[4]);
 							int quantity = Integer.parseInt(parts[5]);
 							int price = Integer.parseInt(parts[6]);
-							String description = parts[7];
-							int id = Integer.parseInt(parts[8]);
+							int cost = Integer.parseInt(parts[7]); // TODO Add cost var into server end
+							String description = parts[8];
+							int id = Integer.parseInt(parts[9]);
 
 							String[] categories = unparsedCats.split(",");
 
 							try {
-								Main.getIMS().createListing(id, listingName, description, quantity, price, hasImage,
-										isSold, image, categories);
+								Main.getIMS().createListing(id, listingName, description, quantity, price, cost,
+										hasImage, isSold, image, categories);
 							} catch (ListingException e) {
 								JOptionPane.showMessageDialog(null, "Failed to create listing: " + e.getMessage());
 								e.printStackTrace();
@@ -205,6 +208,10 @@ public class MainFrame extends JFrame {
 		listingPanel.addTab("Listings", null, panel, null);
 		panel.setLayout(null);
 
+		PointOfSaleFrame pos = new PointOfSaleFrame();
+		listingPanel.addTab("Sale", null, pos, null);
+		pos.setLayout(null);
+
 		JLabel lblSortBy = new JLabel("Sort By:");
 		lblSortBy.setBounds(12, 12, 70, 15);
 		panel.add(lblSortBy);
@@ -227,34 +234,15 @@ public class MainFrame extends JFrame {
 		Collections.sort(listings, new SortByName());
 		for (Listing l : Main.getIMS().getListings())
 			listModel.addElement(l);
-
 		list = new JList<Listing>(listModel);
 		list.addListSelectionListener(new ListChangeListener());
 		JScrollPane listingScroller = new JScrollPane(list);
 		allListingPanel.add(listingScroller);
 
 		JButton btnNewListing = new JButton("New Listing");
-		btnNewListing.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				// TODO Create new Listing
-				int id;
-				String name;
-				while (true)
-					try {
-						id = Integer.parseInt(JOptionPane.showInputDialog("Listing ID:"));
-						name = JOptionPane.showInputDialog("Listing name: ");
-						break;
-					} catch (Exception e1) {
-						continue;
-					}
-				try {
-					Main.getIMS().createListing(id, name, " ", 0, 0, false, false, null, new String[1]);
-				} catch (ListingException e1) {
-					e1.printStackTrace();
-					JOptionPane.showMessageDialog(null, "Failed to create new Listing: " + e1.getMessage());
-				}
-			}
-		});
+		nll = new NewListingListener();
+
+		btnNewListing.addActionListener(nll);
 		btnNewListing.setBounds(12, 248, 117, 25);
 		panel.add(btnNewListing);
 
@@ -269,10 +257,52 @@ public class MainFrame extends JFrame {
 		displayPanel.addTab("Edit", null, editTab, "Editing Listing");
 
 		prog.setVisible(false);
+		this.setJMenuBar(new MainMenuBar(this));
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		addComponentListener(new MainFrameResizeListener());
 		// TODO work on implementing GUI
+	}
+
+	public NewListingListener getNewListingListener() {
+		return nll;
+	}
+
+	public void updateList() {
+		listModel = new DefaultListModel<Listing>();
+		// Populate listings
+		List<Listing> listings = new ArrayList<Listing>(Main.getIMS().getListings());
+		// Complete default ordering
+		Collections.sort(listings, new SortByName());
+		for (Listing l : Main.getIMS().getListings())
+			listModel.addElement(l);
+		list.setModel(listModel);
+	}
+
+	public class NewListingListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			long id;
+			String name;
+			while (true)
+				try {
+					id = Long.parseLong(JOptionPane.showInputDialog("Listing SKU:"));
+					if (Main.getIMS().getListing(id) != null) {
+						JOptionPane.showMessageDialog(null, "SKU Already in use!");
+						continue;
+					}
+					name = JOptionPane.showInputDialog("Listing name: ");
+					break;
+				} catch (Exception e1) {
+					continue;
+				}
+			try {
+				Main.getIMS().createListing(id, name, " ", 0, 0, 0, false, false, null, new String[1]);
+				listModel.addElement(Main.getIMS().getListing(id));
+			} catch (ListingException e1) {
+				e1.printStackTrace();
+				JOptionPane.showMessageDialog(null, "Failed to create new Listing: " + e1.getMessage());
+			}
+		}
 	}
 
 	private class SortByName implements Comparator<Listing> {
@@ -288,7 +318,7 @@ public class MainFrame extends JFrame {
 				n = n2.length;
 
 			for (int i = 0; i < n; i++) {
-				System.out.println(n1[i] + ":" + n2[i]);
+				//System.out.println(n1[i] + ":" + n2[i]);
 				if (n1[i] == n2[i])
 					continue;
 				if (n1[i] > n2[i])
@@ -353,10 +383,11 @@ public class MainFrame extends JFrame {
 			prog.setVisible(true);
 			progUpdate.setText("Loading Listing");
 			displayTab.removeAll();
-			displayTab.add(new JScrollPane(new ListingPanel(list.getSelectedValue())));
+			ListingPanel lp = new ListingPanel(list.getSelectedValue(), t);
+			displayTab.add(new JScrollPane(lp));
 			displayTab.repaint();
 			editTab.removeAll();
-			editTab.add(new EditPanel(list.getSelectedValue()));
+			editTab.add(new EditPanel(list.getSelectedValue(), lp));
 			editTab.repaint();
 			t.repaint();
 			prog.setVisible(false);

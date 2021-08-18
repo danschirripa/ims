@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Hashtable;
 
 import edu.moravian.schirripad.ims.client.Main;
@@ -16,7 +17,7 @@ public class InventoryManager {
 	private Logger log = new Logger("IM");
 
 	private Hashtable<String, Listing> listings = new Hashtable<String, Listing>();
-	private Hashtable<Integer, Listing> listingsByID = new Hashtable<Integer, Listing>();
+	private Hashtable<Long, Listing> listingsByID = new Hashtable<Long, Listing>();
 	private File invDir;
 
 	public InventoryManager() {
@@ -43,6 +44,9 @@ public class InventoryManager {
 
 		File[] listings = invDir.listFiles();
 		for (File listing : listings) {
+			if(listing.getName().startsWith(".")) {
+				continue;
+			}
 			try {
 				Listing l = new Listing(listing);
 				this.listings.put(l.getListingName(), l);
@@ -66,16 +70,37 @@ public class InventoryManager {
 	public boolean removeListing(String listingName) {
 		if (!listings.containsKey(listingName))
 			return false;
+		Listing l = listings.get(listingName);
 		listings.remove(listingName);
+		listingsByID.remove(l.getID());
 		return true;
 	}
 
-	public Listing getListing(int id) {
+	public boolean removeListing(long id) {
+		if (!listingsByID.containsKey(id)) {
+			return false;
+		}
+		Listing l = listingsByID.get(id);
+		File f = new File(invDir, l.getListingName() + ".listing");
+		if (!f.exists()) {
+			log.err("Failed to delete " + f.getAbsolutePath() + "\nFile does not exist");
+			return false;
+		}
+		if (!f.delete()) {
+			log.err("Failed to delete " + f.getAbsolutePath() + "\nFile failed to delete");
+			return false;
+		}
+		listingsByID.remove(id);
+		listings.remove(l.getListingName());
+		return true;
+	}
+
+	public Listing getListing(long id) {
 		return listingsByID.get(id);
 	}
 
-	public void createListing(int id, String listingName, String description, int quantity, int price, boolean hasImage,
-			boolean isSold, File image, String[] categories) throws ListingException {
+	public void createListing(long id, String listingName, String description, int quantity, int price, int cost,
+			boolean hasImage, boolean isSold, File image, String[] categories) throws ListingException {
 		File f = new File(invDir, listingName + ".listing");
 		try {
 			if (f.exists()) {
@@ -89,7 +114,8 @@ public class InventoryManager {
 			PrintStream out = new PrintStream(new FileOutputStream(f));
 			out.println("id:" + id);
 			out.println("hasimage:" + hasImage);
-			// out.println("imgfile:" + image.getPath());
+			if(hasImage)
+			out.println("imgfile:" + image.getPath());
 			out.println("name:" + listingName);
 			out.print("categories:");
 			String allCats = "";
@@ -100,6 +126,7 @@ public class InventoryManager {
 			out.println("sold:" + isSold);
 			out.println("quantity:" + quantity);
 			out.println("price:" + price);
+			out.println("cost:" + cost);
 			out.println("description:" + description);
 			if (MainFrame.ch == null)
 				out.println("new:" + true);
@@ -116,7 +143,7 @@ public class InventoryManager {
 				lName = lName + n;
 				n++;
 			}
-
+ 
 			if (MainFrame.ch != null) {
 				CreateListingTicket clt = new CreateListingTicket(l);
 				MainFrame.ch.addTicket(clt);
@@ -127,6 +154,13 @@ public class InventoryManager {
 
 		} catch (Exception e) {
 			throw new ListingException(e);
+		}
+	}
+	
+	public void fireGlobalPropertyChange(String propId, String value) {
+		Enumeration<Listing> lstngs = listingsByID.elements();
+		while(lstngs.hasMoreElements()) {
+			lstngs.nextElement().receiveGlobalPropertyChange(propId, value);
 		}
 	}
 
